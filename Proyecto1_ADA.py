@@ -1,4 +1,5 @@
 ﻿import yaml
+from graphviz import Digraph
 
 #Referencia: https://python-course.eu/applications-python/turing-machine.php
 #Clase para Cinta
@@ -118,6 +119,7 @@ def get_data():
    
    return data
 
+#Obtencion Maquina de Turing
 def get_TuringMachine(tape,data):
     
     transition_function = dict()
@@ -143,10 +145,48 @@ def get_TuringMachine(tape,data):
                       final_states = {data['q_states']['final']},
                       transition_function = transition_function)
 
+
+#Generación de diagrama de máquina de Turing
+def plot_af(t,state, graph=None, visited=None):
+    if visited is None:
+        visited = set()
+
+    if state in visited:
+        return graph
+
+    if graph is None:
+        graph = Digraph(engine='dot', graph_attr={'rankdir': 'LR'})
+    
+    if state in t.final_states:
+        graph.node(name=str(state), label=str(state), shape='doublecircle', color="green")
+        if len(visited)==0:
+             graph.node(name="start", label="start", shape='point')
+             graph.edge("start", str(state), label="inicio")
+    elif len(visited)==0:
+        graph.node(name="start", label="start", shape='point')
+        graph.node(name=str(state), label=str(state), shape='circle', color="blue")
+        graph.edge("start", str(state), label="inicio")
+    else:
+        graph.node(name=str(state), label=str(state), shape='circle')
+        
+    visited.add(state)
+
+    for initial_control, final_control in t.transition_function.items():
+        if initial_control[0]==state:
+            graph.edge(str(state), str(final_control[0]), label=str(initial_control[1])+","+str(final_control[1])+"/"+str(final_control[2]))
+            plot_af(t,final_control[0], graph, visited)
+
+    return graph
+
 #Simulacion por cada string
 data = get_data()
+i=0
 for tape in data['simulation_strings']:
     t = get_TuringMachine(tape,data)
+    if i==0:
+        tree_graph = plot_af(t,t.current_control)
+        nombre_archivo_pdf = 'Diagrama Máquina de Turing'
+        tree_graph.view(filename=nombre_archivo_pdf,cleanup=True)
     
     print('\nInput:\n' + t.get_tape())
     
@@ -154,3 +194,5 @@ for tape in data['simulation_strings']:
         if not t.step():
             print('ERROR: Cadena rechazada')
             break
+        
+    i+=1

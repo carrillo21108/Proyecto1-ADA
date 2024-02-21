@@ -820,4 +820,5 @@ delta:
       tape_output: 'B'
       tape_displacement: 'L'
 simulation_strings:
-- '111'
+- '1'
+- '11'
